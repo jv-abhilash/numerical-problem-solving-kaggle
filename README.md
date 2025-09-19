@@ -60,7 +60,7 @@ Input → Ingestion → Routing → Agent Processing → Verification → Output
 ### Architecture Diagrams
 
 #### D1: End-to-End Pipeline
-![Figure 1: Complete system pipeline from document ingestion to report generation](./images/image_1.png)
+![Figure 1: Complete system pipeline from document ingestion to report generation](./images/image_1.PNG)
 
 #### D2: Router Micro-Batch Processing
 ![Figure 2: Sequence diagram showing batched router processing for efficiency](./images/image_2.png)
