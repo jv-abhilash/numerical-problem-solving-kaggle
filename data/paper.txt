@@ -1,0 +1,377 @@
+Q1. Consider the following statements:
+Statement-I: The set of all solution of the linear inequalities 3x + 8 < 17 and 2x + 8 >= 12 are x < 3 and x >= 2 respectively.
+Statement-II: The common set of solution of linear inequalities 3x + 8 < 17 and 2x + 8 >= 12 is (2,3).
+Which of the following is true?
+(1) Statement-I is false but Statement-II is true
+(2) Both the statements are true
+(3) Both the statements are false
+(4) Statement-I is true but Statement-II is false
+
+Q2. The number of four digit even numbers that can be formed using the digits 0, 1, 2 and 3 without repetition is:
+(1) 10
+(2) 4
+(3) 6
+(4) 6
+
+Q3. The number of diagonals that can be drawn in an octagon is:
+(1) 20
+(2) 28
+(3) 30
+(4) 15
+
+Q4. If the number of terms in the binomial expansion of (2x + 3)^n is 22, then the value of n is:
+(1) 6
+(2) 7
+(3) 9
+(4) 8
+
+Q5. If the 4th, 10th, and 16th terms of a G.P. are x, y, and z respectively, then:
+(1) y = sqrt(xz)
+(2) x = sqrt(yz)
+(3) y = (x + z)/2
+(4) z = sqrt(xy)
+
+Q6. If A is a square matrix such that A^2 = A, then (I − A)^3 is:
+(1) I − A
+(2) I + A
+(3) I − A^3
+(4) I − A
+
+Q7. If A and B are two matrices such that AB is an identity matrix and the order of matrix B is 3×4, then the order of matrix A is:
+(1) 3×3
+(2) 4×3
+(3) 4×4
+(4) 3×4
+
+Q8. Which of the following statements is not correct?
+(1) A diagonal matrix has all diagonal elements equal to zero.
+(2) A symmetric matrix A is a square matrix satisfying A' = A.
+(3) A skew symmetric matrix has all diagonal elements equal to zero.
+(4) A row matrix has only one row.
+
+Q9. If a matrix A = [[1,1],[1,1]] satisfies A^6 = k A', then the value of k is:
+(1) 1
+(2) 1/32
+(3) 6
+(4) 32
+
+Q10. If A = [[k,2],[2,k]] and |A^3| = 125, then the value of k is:
+(1) ±3
+(2) -5
+(3) -4
+(4) ±2
+
+Q11. If A is a square matrix satisfying the equation A^2 − 5A + 7I = 0, where I is the identity matrix and 0 is the null matrix of the same order, then A^{-1} is:
+(1) (1/7)(A − 5I)
+(2) 7(5I − A)
+(3) (1/5)(7I − A)
+(4) (1/7)(5I − A)
+
+Q12. If A is a square matrix of order 3×3, det A = 3, then the value of det(3A^{-1}) is:
+(1) 3
+(2) 27
+(3) 9
+(4) 1/3
+
+Q13. If B = [[1,3],[2,α]] is the adjoint of a matrix A and |A| = 2, then the value of α is:
+(1) 5
+(2) 2
+(3) 3
+(4) 4
+
+Q14. The system of equations 4x + 6y = 5 and 8x + 12y = 10 has:
+(1) Infinitely many solutions.
+(2) A unique solution.
+(3) Only two solutions.
+(4) No solution.
+
+Q15. If a⃗ = î + 2ĵ + k̂, b⃗ = î − ĵ + 4k̂, and c⃗ = î + ĵ + k̂ are such that a⃗ + λ b⃗ is perpendicular to c⃗, then the value of λ is:
+(1) ±1
+(2) 3
+(3) 0
+(4) −1
+
+Q16. If |a⃗| = 10, |b⃗| = 2 and a⃗ · b⃗ = 12, then the value of |a⃗ × b⃗| is:
+(1) 10
+(2) 14
+(3) 16
+(4) 5
+
+Q17. Consider the following statements:
+(I) If either |a⃗| = 0 or |b⃗| = 0, then a⃗ · b⃗ = 0.
+(II) If a⃗ × b⃗ = 0, then a⃗ is perpendicular to b⃗.
+Which of the following is correct?
+(1) Statement (I) is false but Statement (II) is true
+(2) Both Statement (I) and Statement (II) are true
+(3) Both Statement (I) and Statement (II) are false
+(4) Statement (I) is true but Statement (II) is false
+
+Q18. If a line makes angles 90°, 60° and θ with x, y and z axes respectively, where θ is acute, then the value of θ is:
+(1) π/4
+(2) π/3
+(3) π/2
+(4) π/6
+
+Q19. The equation of the line through the point (0,1,2) and perpendicular to the line (x−1)/2 = (y+1)/3 = (z−1)/(-2) is:
+(1) x/(-3) = (y−1)/4 = (z−2)/(-4)
+(2) x/(-3) = (y−1)/4 = (z−2)/3
+(3) x/(-4) = (y−1)/(-4) = (z−2)/(-3)
+(4) x/3 = (y−1)/4 = (z−2)/(-3)
+
+Q20. A line passes through (−1, −3) and is perpendicular to x + 6y = 5. Its x-intercept is:
+(1) -1/2
+(2) -2
+(3) 2
+(4) 1/2
+
+Q21. The length of the latus rectum of x^2 + 3y^2 = 12 is:
+(1) 1/3 units
+(2) 4√3 units
+(3) 24 units
+(4) 2/3 units
+
+Q22. The value of lim_{x→1} (x^4 − √x)/(x − 1) is:
+(1) 7
+(2) does not exist
+(3) 1
+(4) 0
+
+Q23. If y = cos x / (1 + sin x), then which is correct?
+(1) dy/dx = −1/(1 + sin x)
+(2) dy/dx = 1/(1 + sin x)
+(3) dy/dx = −(1/2) sec^2(π/4 − x/2)
+(4) dy/dx = −(1/2) sec^2(π/4 − x/2)
+
+Q24. Match the following. In the following, [x] denotes the greatest integer less than or equal to x.
+(1) a - iv, b - iii, c - i, d - ii
+(2) a - iii, b - ii, c - iv, d - i
+(3) a - iii, b - ii, c - i, d - iii
+(4) a - ii, b - iv, c - i, d - iii
+
+Q25. The function f(x) = { e^x + ax, x < 0 ; b(x − 1)^2, x >= 0 } is differentiable at x = 0. Then,
+(1) a = 3, b = 1
+(2) a = −3, b = 1
+(3) a = 3, b = −1
+(4) a = −3, b = −1
+
+Q26. A function f(x) = { 1/(e^x − 1), if x ≠ 0 ; 1/(e^x + 1), if x = 0 } is given. Then, which of the following is true?
+(1) not continuous at x = 0
+(2) differentiable at x = 0
+(3) differentiable at x = 0, but not continuous at x = 0
+(4) continuous at x = 0
+
+Q27. If y = a sin^3 t, x = a cos^3 t, then dy/dx at t = 3π/4 is:
+(1) 1/√3
+(2) −√3
+(3) 1
+(4) −1
+
+Q28. The derivative of sin x with respect to log x is:
+(1) x cos x
+(2) cos x log x
+(3) cos x
+(4) cos x
+
+Q29. The minimum value of 1 − sin x is:
+(1) −1
+(2) 1
+(3) 2
+(4) 0
+
+Q30. The function f(x) = tan x − x
+(1) always decreases
+(2) never increases
+(3) neither increases nor decreases
+(4) always increases
+
+Q31. The value of ∫ dx / [(x+1)(x+2)] is:
+(1) log |(x−1)/(x−2)| + c
+(2) log |(x+2)/(x+1)| + c
+(3) log |(x+1)/(x+2)| + c
+(4) log |(x−1)/(x+2)| + c
+
+Q32. The value of ∫_{−1}^{1} sin^5 x cos^4 x dx is:
+(1) π
+(2) π/2
+(3) 0
+(4) −π
+
+Q33. The value of ∫_{0}^{2π} (1 + sin(x/2)) dx is:
+(1) 4
+(2) 2
+(3) 0
+(4) 8
+
+Q34. The integral ∫ dx / [x^2 (x^4 + 1)^{3/4}] equals:
+(1) (x^4 + 1)^{1/4} + c
+(2) −(x^4 + 1)^{1/4} + c
+(3) −(x^4 + 1)^{1/4}/x^4 + c
+(4) ((x^4 + 1)/x^4)^{1/4} + c
+
+Q35. The value of the integral ∫_{0}^{1} log(1 − x) dx is:
+(1) 0
+(2) log(2)
+(3) log(1/2)
+(4) 1
+
+Q36. The area bounded by the curve y = sin(x/3), x-axis, the lines x = 0 and x = 3π is:
+(1) 1 sq. unit
+(2) 6 sq. units
+(3) 3 sq. units
+(4) 9 sq. units
+
+Q37. The area of the region bounded by the curve y = x^2 and the line y = 16 is:
+(1) 256/3 sq. units
+(2) 64 sq. units
+(3) 128/3 sq. units
+(4) 32/3 sq. units
+
+Q38. General solution of the differential equation dy/dx + y tan x = sec x is:
+(1) y tan x = sec x + c
+(2) cos x = y tan x + c
+(3) y sec x = tan x + c
+(4) y sec x = sec x ∫ sec x dx + c
+
+Q39. If ‘a’ and ‘b’ are the order and degree respectively of the differential equation d^2y/dx^2 + (dy/dx)^3 + x^4 = 0, then a − b =
+(1) 2
+(2) -1
+(3) 0
+(4) 1
+
+Q40. The distance of the point P(−3, 4, 5) from the yz-plane is:
+(1) 5 units
+(2) 3 units
+(3) 4 units
+(4) 3 units
+
+Q41. If A = {x : x is an integer and x^2 − 9 >= 0}, B = {x : x is a natural number and 2 <= x <= 5}, C = {x : x is a prime number <= 4}. Then (B − C) ∪ A is:
+(1) {2, 3, 4}
+(2) {3, 4, 5}
+(3) {2, 3, 5}
+(4) {−3, 3, 4}
+
+Q42. A and B are two sets having 3 and 6 elements respectively. Consider the following statements:
+Statement (I): Minimum number of elements in A ∪ B is 3.
+Statement (II): Maximum number of elements in A ∩ B is 3.
+Which of the following is correct?
+(1) Statement (I) is false, statement (II) is true.
+(2) Both statements (I) and (II) are true.
+(3) Both statements (I) and (II) are false.
+(4) Statement (I) is true, statement (II) is false.
+
+Q43. Domain of the function f(x) = 1/[(x − 2)(x − 5)] is:
+(1) (−∞, 2) ∪ (5, ∞)
+(2) (−∞, 3] ∪ (5, ∞)
+(3) (−∞, 3) ∪ (5, ∞)
+(4) (−∞, 2] ∪ [5, ∞)
+
+Q44. If f(x) = sin(⌊x^2⌋) − sin(⌊−x^2⌋), where ⌊x⌋ denotes the greatest integer <= x, then which of the following is not true?
+(1) f(π^2) = 1
+(2) f(π^4) = 1 + 1/√2
+(3) f(π) = −1
+(4) f(0) = 0
+
+Q45. Which of the following is not correct?
+(1) sin 2π = sin(−2π)
+(2) sin 4π = sin 6π
+(3) tan 45° = tan(−315°)
+(4) cos 5π = cos 4π
+
+Q46. If cos x + cos^2 x = 1, then the value of sin^2 x + sin^4 x is:
+(1) 1
+(2) 0
+(3) 2
+(4) -1
+
+Q47. The mean deviation about the mean for the data 4, 7, 8, 9, 10, 12, 13, 17 is:
+(1) 3
+(2) 8.5
+(3) 4.03
+(4) 10
+
+Q48. A random experiment has five outcomes w1, w2, w3, w4, w5. The probabilities of w1, w2, w4, w5 are respectively 1/6, a, b, 1/12 such that 12a + 12b − 1 = 0. Then the probability of outcome w3 is:
+(1) 1/3
+(2) 1/6
+(3) 1/12
+(4) 2/3
+
+Q49. A die has two faces each with number ‘1’, three faces each with number ‘2’ and one face with number ‘3’. If the die is rolled once, then P(1 or 3) is:
+(1) 1/2
+(2) 1/3
+(3) 1/6
+(4) 2/3
+
+Q50. Let A = {a, b, c}. The number of equivalence relations on A containing (b, c) is:
+(1) 3
+(2) 2
+(3) 4
+(4) 1
+
+Q51. Let f,g : [0, π/2] → R be given by f(x) = sin x and g(x) = cos x. Consider:
+(I) f and g are one-to-one.
+(II) f + g is one-to-one.
+Which of the following is correct?
+(1) Statement (I) is false, statement (II) is true.
+(2) Both statements (I) and (II) are true.
+(3) Both statements (I) and (II) are false.
+(4) Statement (I) is true, statement (II) is false.
+
+Q52. Find sec^2(tan^{-1} 2) + csc^2(cot^{-1} 3) = ?
+(1) 5
+(2) 15
+(3) 10
+(4) 1
+
+Q53. The equation 2 cos^{-1} x = sin^{-1}( 2√(1 − x^2) ) is valid for all values of x satisfying:
+(1) −1 <= x <= 1
+(2) 0 <= x <= 1
+(3) 1/√2 <= x <= 1
+(4) 0 <= x <= 1/√2
+
+Q54. Consider:
+(I) In a LPP, the objective function is always linear.
+(II) In a LPP, the linear inequalities on variables are called constraints.
+Which of the following is correct?
+(1) Statement (I) is true, Statement (II) is false.
+(2) Both Statements (I) and (II) are false.
+(3) Statement (I) is false, Statement (II) is true.
+(4) Both statements (I) and (II) are true.
+
+Q55. The maximum value of z = 3x + 4y, subject to the constraints x + y <= 40, x + 2y >= 60 and x, y >= 0 is:
+(1) 120
+(2) 140
+(3) 40
+(4) 130
+
+Q56. Consider:
+(I) If E and F are two independent events, then E' and F' are also independent.
+(II) Two mutually exclusive events with non-zero probabilities cannot be independent.
+Which is correct?
+(1) Statement (I) is false and statement (II) is true.
+(2) Both the statements are true.
+(3) Both the statements are false.
+(4) Statement (I) is true and statement (II) is false.
+
+Q57. If A and B are two non-mutually exclusive events such that P(A|B) = P(B|A), then:
+(1) A = B
+(2) A ∩ B = ∅
+(3) P(A) = P(B)
+(4) A ⊆ B but A ≠ B
+
+Q58. If A and B are two events such that A ⊆ B and P(B) ≠ 0, then which of the following is correct?
+(1) P(A) < P(B)
+(2) P(A|B) >= P(A)
+(3) P(A) = P(B)
+(4) P(A|B) = P(A)/P(B)
+
+Q59. Meera visits only one of the two temples A and B. P(A) = 2/5. If she visits A, P(meet friend) = 1/3; if she visits B, P(meet friend) = 2/7. Given she met her friend at one of the temples, the probability it was at temple B is:
+(1) 5/16
+(2) 3/16
+(3) 9/16
+(4) 7/16
+
+Q60. If Z1 and Z2 are two non-zero complex numbers, which of the following is not true?
+(1) |Z1 Z2| = |Z1||Z2|
+(2) Z1 Z2 = Z1 · Z2
+(3) |Z1 + Z2| >= |Z1| + |Z2|
+(4) Z1 + Z2 = Z1 + Z2

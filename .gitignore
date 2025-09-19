@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.build/
+dist/
+.eggs/
+
+# Envs
+.env
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project data/artifacts (adjust if you want to track some)
+data/*.csv
+data/*.parquet
+data/*.json
+data/*.xlsx
+*.log
