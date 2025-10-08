@@ -1,11 +1,11 @@
 # router/solver.py
 from typing import Dict, Any, List, Tuple, Optional
 import os, json
-from planner import expected_qkeys_from_prompt, parse_questions, render_batch_block
-from utils.schema import extract_between_markers, best_json_candidate
-from normalize import fix_explain
-from router import route_question
-from models.solver_llm import call_model  # must support model_id=... kw or your flexible (*args) version
+from .planner import expected_qkeys_from_prompt, parse_questions, render_batch_block
+from src.utils.schema import extract_between_markers, best_json_candidate
+from .normalize import fix_explain
+from .router import route_question
+from src.models.solver_llm import call_model  # must support model_id=... kw or your flexible (*args) version
 
 DEFAULT_MODEL_ID = os.getenv("FALLBACK_MODEL_ID", os.getenv("DEFAULT_MODEL_ID", "")) or \
                    "Qwen/Qwen3-235B-A22B-Thinking-2507"
