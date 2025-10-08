@@ -240,25 +240,78 @@ kcet-math-solver/
 │   ├── pdf-mcp/
 │   └── eval-mcp/
 ├── src/
-│   ├── main.py
-│   ├── integration/
-│   │   └── mcp_client.py
-│   ├── pipeline/
-│   │   ├── ingest.py
-│   │   ├── normalize.py
-│   │   ├── router.py
-│   │   ├── planner.py
-│   │   ├── agent.py
-│   │   ├── tools.py
-│   │   ├── verifier.py
-│   │   ├── writer.py
-│   │   └── evaluator.py
-│   ├── models/
-│   │   ├── router_llm.py
-│   │   └── solver_llm.py
-│   └── utils/
-│       ├── schema.py
-│       └── io.py
+|   ├── __init__.py
+|   ├── main.py                      # Main orchestrator
+|   ├── config.py                    # Global configuration
+|   │
+|   ├── p1_ingestion/                # P1: Document Ingestion & Parsing
+|   │   ├── __init__.py
+|   │   ├── config.py                # P1-specific config
+|   │   ├── readers.py               # PDF/TXT readers
+|   │   ├── cleaners.py              # Text cleaning
+|   │   ├── extractors.py            # Question extraction
+|   │   ├── validators.py            # Validation
+|   │   ├── parser.py                # Main parser
+|   │   └── api.py                   # Public API
+|   │
+|   ├── p2_routing/                  # P2: Question Routing & Classification
+|   │   ├── __init__.py
+|   │   ├── config.py
+|   │   ├── classifier.py            # Topic classification
+|   │   ├── difficulty.py            # Difficulty assessment
+|   │   ├── router.py                # Main router
+|   │   └── api.py
+|   │
+|   ├── p3_planning/                 # P3: Step Planning & Budgeting
+|   │   ├── __init__.py
+|   │   ├── planner.py               # Step planner
+|   │   ├── budgeter.py              # Budget allocation
+|   │   └── api.py
+|   │
+|   ├── p4_solving/                  # P4: Problem Solving (Agent)
+|   │   ├── __init__.py
+|   │   ├── agent.py                 # Main agent
+|   │   ├── solver.py                # Solver logic
+|   │   ├── tools.py                 # Tool usage
+|   │   └── api.py
+|   │
+|   ├── p5_verification/             # P5: Answer Verification
+|   │   ├── __init__.py
+|   │   ├── verifier.py              # Verification logic
+|   │   ├── symbolic.py              # Symbolic verification
+|   │   ├── numeric.py               # Numeric checks
+|   │   └── api.py
+|   │
+|   ├── p6_output/                   # P6: Output Generation
+|   │   ├── __init__.py
+|   │   ├── writer.py                # Write outputs
+|   │   ├── formatter.py             # Format results
+|   │   └── api.py
+|   │
+|   ├── p7_evaluation/               # P7: Evaluation & Metrics
+|   │   ├── __init__.py
+|   │   ├── evaluator.py             # Main evaluator
+|   │   ├── metrics.py               # Metrics calculation
+|   │   └── api.py
+|   │
+|   ├── llm/                         # LLM Interfaces (shared)
+|   │   ├── __init__.py
+|   │   ├── router_llm.py            # Router LLM
+|   │   ├── solver_llm.py            # Solver LLM
+|   │   └── base.py                  # Base LLM interface
+|   │
+|   ├── integration/                 # Integration Layer
+|   │   ├── __init__.py
+|   │   ├── mcp_client.py            # MCP client
+|   │   └── tools.py                 # Tool integrations
+|   │
+|   └── shared/                      # Shared Utilities
+|       ├── __init__.py
+|       ├── io.py                    # I/O operations
+|       ├── schema.py                # Data schemas
+|       ├── normalize.py             # Text normalization
+|       └── logging.py               # Logging utilities    
+|
 ├── scripts/
 │   └── run_local.sh
 └── tests/

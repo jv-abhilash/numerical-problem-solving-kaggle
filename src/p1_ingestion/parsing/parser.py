@@ -13,7 +13,7 @@ import pdfplumber
 
 from ..utils.io import _to_int, normalize_record
 from ..utils.schema import extract_between_markers, brace_scan_candidates, try_json_loads
-from .normalize import _clean, phrase_from_question
+from .cleaners import _clean, phrase_from_question
 
 
 class DocumentParser:

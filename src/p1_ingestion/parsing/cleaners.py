@@ -1,4 +1,4 @@
-# src/utils/normalize.py
+# src/p1_ingestion/parsing/normalize.py
 """
 Text normalization utilities - enhanced version of existing text_utils.py
 Maintains compatibility while adding P1 normalization support
