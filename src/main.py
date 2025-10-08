@@ -86,7 +86,8 @@ def main() -> int:
         upsert_run(run_id, paper_path, db_path=args.db_path)
         save_questions(run_id, questions, db_path=args.db_path)
         log.info(f"Saved questions to SQLite → {args.db_path} (run_id={run_id})")
-
+        
+        
     # 3) Debug artifact
     _save_debug_json(args.debug_json, questions)
     log.info(f"Wrote debug JSON → {args.debug_json}")
