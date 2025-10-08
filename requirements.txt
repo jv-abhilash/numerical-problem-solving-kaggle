@@ -1,19 +1,98 @@
-python-dotenv>=1.0
-pandas>=2.0,<2.3            # Kaggle ships 2.2.x; safe pin to avoid bigframes conflicts
-huggingface_hub>=0.24
-transformers>=4.41
-accelerate>=0.30
-einops>=0.7
-sentencepiece>=0.1.99
-bitsandbytes>=0.43 ; platform_system == "Linux" and platform_machine == "x86_64"
+python-dotenv
+pandas
+huggingface_hub
+transformers
+accelerate
+einops
+sentencepiece
+bitsandbytes; platform_system == "Linux" and platform_machine == "x86_64"
 
-# Only if you use datasets / GCS / BigQuery:
-datasets>=3.0
-fsspec==2025.3.2
-gcsfs==2025.3.2
-google-cloud-bigquery>=3.31.0
+datasets
+fsspec
+gcsfs
+google-cloud-bigquery
+google-cloud-bigquery-storage
 
-google-cloud-bigquery-storage>=2.30.0,<3.0.0
+rich
+pdfplumber
+PyMuPDF
 
+# requirements_streamlit.txt
+# Add these to your existing requirements.txt
 
-rich<14
+streamlit
+# tempfile-utils
+plotly  # For future charts/visualizations
+
+# # setup_streamlit.sh
+# #!/bin/bash
+
+# echo "Setting up KCET Math Solver Streamlit App"
+# echo "=========================================="
+
+# # Install additional requirements
+# pip install streamlit plotly
+
+# # Create necessary directories
+# mkdir -p temp
+# mkdir -p data/results
+
+# # Set environment variables for Streamlit
+# export STREAMLIT_SERVER_PORT=8501
+# export STREAMLIT_SERVER_ADDRESS=localhost
+
+# echo "Setup complete!"
+# echo ""
+# echo "To run the Streamlit app:"
+# echo "streamlit run streamlit_app.py"
+# echo ""
+# echo "Then open: http://localhost:8501"
+
+# # run_streamlit.sh
+# #!/bin/bash
+
+# # Launch script for the Streamlit app
+
+# echo "Launching KCET Math Solver Chatbot..."
+# echo "====================================="
+
+# # Check if required files exist
+# if [ ! -f "streamlit_app.py" ]; then
+#     echo "Error: streamlit_app.py not found in current directory"
+#     exit 1
+# fi
+
+# if [ ! -f "src/main.py" ]; then
+#     echo "Error: src/main.py not found - make sure you're in the project root"
+#     exit 1
+# fi
+
+# # Set up environment
+# export PYTHONPATH="${PYTHONPATH}:$(pwd)"
+
+# # Launch Streamlit
+# streamlit run streamlit_app.py --server.port=8501 --server.address=localhost
+
+# # streamlit_config.toml
+# # Create this in .streamlit/config.toml for custom configuration
+
+# [global]
+# dataFrameSerialization = "legacy"
+
+# [server]
+# port = 8501
+# address = "localhost"
+# baseUrlPath = ""
+# enableCORS = false
+# enableXsrfProtection = true
+# maxUploadSize = 200
+
+# [browser]
+# gatherUsageStats = false
+
+# [theme]
+# primaryColor = "#FF6B6B"
+# backgroundColor = "#FFFFFF"
+# secondaryBackgroundColor = "#F0F2F6"
+# textColor = "#262730"
+# font = "sans serif"
