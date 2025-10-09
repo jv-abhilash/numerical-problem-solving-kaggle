@@ -1,6 +1,7 @@
 """
 P1: Ingestion & Normalization
 Parses TXT/PDF and returns List[Question] (src.shared.schema.Question)
+Strict KCET format: questions start with 'Qn' and options use numbered markers (1)(2)(3)(4).
 """
 from __future__ import annotations
 import re
@@ -21,13 +22,11 @@ except Exception:  # pragma: no cover
 from src.shared.schema import Question
 from .cleaners import _clean, normalize_question_text, normalize_option_text
 
-# Patterns
-_QANCHOR = re.compile(r"(?im)^\s*(?:Q\s*)?(\d{1,3})\s*[\.\)]?\s*:?\s*")  # "Q12", "12.", "12)"
-# Options: A/B/C/D and 1/2/3/4 variants
-_OPT_ANCHORS = [
-    re.compile(r"(?im)^\s*[\(\[]?\s*([ABCD])\s*[\)\].-]?\s+"),   # "(A) ", "B) ", "C. "
-    re.compile(r"(?im)^\s*[\(\[]?\s*([1-4])\s*[\)\].-]?\s+"),    # "(1) ", "2) ", "3. "
-]
+# ---------- Patterns (strict to your KCET format) ----------
+# Q-anchors at line start: "Q1", "Q2", optionally followed by '.', ')', ':' or '-'
+_QANCHOR = re.compile(r"(?m)^\s*Q\s*(\d{1,3})\s*[\.\):\-]?\s*")
+# Numbered options: (1) ( 2 ) etc.
+_NUM_OPT = re.compile(r"\(\s*([1-4])\s*\)")
 
 class DocumentParser:
     """Parse KCET-like papers from TXT or PDF into unified Question dicts."""
@@ -43,7 +42,6 @@ class DocumentParser:
             text = self._read_pdf(p)
         else:
             text = self._read_txt(p)
-
         return self._extract_questions(text, prefix=prefix)
 
     # ----------- Readers -----------
@@ -59,20 +57,35 @@ class DocumentParser:
         return self._clean_text(path.read_text(encoding="utf-8", errors="ignore"))
 
     def _read_pdf(self, path: Path) -> str:
-        # Try PyMuPDF first
+    # Try PyMuPDF first
         if pymupdf is not None:
             try:
-                out = []
+                out: List[str] = []
                 with pymupdf.open(path) as doc:  # type: ignore[attr-defined]
                     for page in doc:
-                        out.append(page.get_text())
+                        txt = ""
+                        # Prefer modern API
+                        try:
+                            txt = page.get_text("text")  # PyMuPDF >= 1.18
+                        except Exception:
+                            # Fallback: some builds accept get_text() without arg
+                            try:
+                                txt = page.get_text()  # type: ignore[call-arg]
+                            except Exception:
+                                # Very old API
+                                try:
+                                    txt = page.getText("text")  # PyMuPDF <= 1.17
+                                except Exception:
+                                    txt = ""
+                        out.append(txt or "")
                 return self._clean_text("\n".join(out))
             except Exception:
-                pass
+                pass  # fall through to pdfplumber
+
         # Fallback to pdfplumber
         if pdfplumber is not None:
             try:
-                out = []
+                out: List[str] = []
                 with pdfplumber.open(path) as pdf:  # type: ignore[attr-defined]
                     for page in pdf.pages:
                         s = page.extract_text() or ""
@@ -80,6 +93,7 @@ class DocumentParser:
                 return self._clean_text("\n".join(out))
             except Exception:
                 pass
+
         raise RuntimeError("No PDF backend available (install PyMuPDF or pdfplumber).")
 
     # ----------- Cleaning -----------
@@ -99,7 +113,7 @@ class DocumentParser:
 
     # ----------- Extraction -----------
     def _extract_questions(self, text: str, *, prefix: str = "Q") -> List[Question]:
-        """Split by question anchors; parse stem and options."""
+        """Split by question anchors; parse stem and numbered options."""
         anchors = list(_QANCHOR.finditer(text))
         out: List[Question] = []
 
@@ -109,17 +123,17 @@ class DocumentParser:
             end = anchors[i + 1].start() if i + 1 < len(anchors) else len(text)
             block = text[start:end].strip()
 
-            # Split stem/options: find first option marker
-            opt_start = self._find_first_option_index(block)
-            if opt_start is None:
+            # Split stem/options at the first "(1)" marker (robust for inline or multiline)
+            m1 = _NUM_OPT.search(block)
+            if not m1:
                 stem_block = block
                 options_block = ""
             else:
-                stem_block = block[:opt_start].strip()
-                options_block = block[opt_start:].strip()
+                stem_block = block[: m1.start()].strip()
+                options_block = block[m1.start():].strip()
 
             stem = normalize_question_text(re.sub(r"^\s*(?:Q\s*)?\d+.*?$", "", stem_block, flags=re.M))
-            opts = self._extract_options(options_block)
+            opts = self._extract_numbered_options(options_block)
 
             qid = f"{prefix}{qnum}"
             out.append({
@@ -133,44 +147,45 @@ class DocumentParser:
 
         return out
 
-    def _find_first_option_index(self, block: str) -> Optional[int]:
-        """Return index of the earliest option marker (A/B/C/D or 1/2/3/4) in a block."""
-        candidates: List[int] = []
-        for pat in _OPT_ANCHORS:
-            m = pat.search(block)
-            if m:
-                candidates.append(m.start())
-        return min(candidates) if candidates else None
-
-    def _extract_options(self, options_block: str) -> List[str]:
-        """Extract up to 4 options from the block using A-D first, then 1-4 as fallback."""
+    def _extract_numbered_options(self, options_block: str) -> List[str]:
+        """
+        Slice options using numbered markers (1)(2)(3)(4),
+        whether options are on separate lines or inline.
+        """
         if not options_block:
             return []
 
-        # Prefer lettered options
-        matches = list(_OPT_ANCHORS[0].finditer(options_block))
-        if not matches:
-            # Fallback to numbered options
-            matches = list(_OPT_ANCHORS[1].finditer(options_block))
+        marks = list(_NUM_OPT.finditer(options_block))
+
+        # Record the FIRST occurrence of each marker 1..4, in order
+        first_by_num: dict[str, re.Match[str]] = {}
+        for m in marks:
+            num = m.group(1)
+            if num in ("1", "2", "3", "4") and num not in first_by_num:
+                first_by_num[num] = m
+
+        if "1" not in first_by_num:
+            # Can't reliably slice without the first marker
+            return []
+
+        ordered = [first_by_num.get(n) for n in ("1", "2", "3", "4")]
+        spans: List[tuple[int, int]] = []
+        for i, m in enumerate(ordered):
+            if m is None:
+                break  # stop at the last present marker
+            start = m.end()
+            next_m = next((x for x in ordered[i + 1:] if x is not None), None)
+            end = next_m.start() if next_m else len(options_block)
+            spans.append((start, end))
 
         opts: List[str] = []
-        if matches:
-            for i, m in enumerate(matches[:4]):
-                start = m.end()
-                end = matches[i + 1].start() if i + 1 < len(matches) else len(options_block)
-                opt_text = options_block[start:end]
-                opt_text = re.sub(r"\n+", " ", opt_text)
-                opt_text = normalize_option_text(opt_text)
-                if opt_text:
-                    opts.append(opt_text)
-        else:
-            # Line-based fallback: take first 4 non-empty lines
-            for ln in options_block.splitlines():
-                ln = normalize_option_text(ln)
-                if ln:
-                    opts.append(ln)
-                if len(opts) == 4:
-                    break
+        for start, end in spans:
+            chunk = options_block[start:end]
+            # collapse whitespace and normalize
+            chunk = re.sub(r"\s+", " ", chunk).strip()
+            chunk = normalize_option_text(chunk)
+            if chunk:
+                opts.append(chunk)
 
         return opts[:4]
 

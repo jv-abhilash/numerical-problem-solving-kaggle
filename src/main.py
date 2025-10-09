@@ -1,104 +1,144 @@
 # src/main.py
-"""
-KCET Math Solver — P1 Ingestion entry point (modular, DB-friendly).
-
-Runs: TXT/PDF -> List[Question] (src.shared.schema.Question)
-Optional: save to SQLite and write a debug JSON for inspection.
-"""
-
 from __future__ import annotations
-import argparse
-import json
-import logging
-from datetime import datetime
-from pathlib import Path
-from typing import List
-
-from src.p1_ingestion.api import parse_document
-from src.shared.schema import Question
-
-# Optional DB: safe to remove if you don't want SQLite persistence yet
-try:
-    from src.shared.db import init_sqlite, upsert_run, save_questions  # provided earlier
-    HAS_DB = True
-except Exception:
-    HAS_DB = False
+import argparse, logging
+from src.storage.factory import get_repository
+from src.p1_ingestion.services.p1_service import P1IngestionService
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 log = logging.getLogger("kcet.main")
 
-
-def _default_run_id(paper_path: str) -> str:
-    ts = datetime.now().strftime("%Y%m%d-%H%M%S")
-    base = Path(paper_path).stem
-    return f"{base}-{ts}"
-
-
-def _save_debug_json(path: str | Path, questions: List[Question]) -> None:
-    p = Path(path)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    with p.open("w", encoding="utf-8") as f:
-        json.dump(questions, f, ensure_ascii=False, indent=2)
-
-
-def build_cli() -> argparse.ArgumentParser:
-    ap = argparse.ArgumentParser(description="KCET Math Solver — P1 Ingestion")
-    ap.add_argument("--paper", default="data/paper.txt", help="Input paper path (.txt or .pdf)")
-    ap.add_argument("--run-id", default=None, help="Run identifier; defaults to <paper>-<timestamp>")
-    ap.add_argument("--debug-json", default="data/p1_questions.json", help="Where to write extracted questions JSON")
-    ap.add_argument("--save-sqlite", action="store_true", help="Persist questions to SQLite (data/solver.db)")
-    ap.add_argument("--db-path", default="data/solver.db", help="SQLite DB path (used only with --save-sqlite)")
-    ap.add_argument("--preview", type=int, default=3, help="How many questions to preview in stdout")
-    ap.add_argument("--verbose", action="store_true", help="Verbose logging")
+def cli():
+    ap = argparse.ArgumentParser("KCET Solver — P1")
+    ap.add_argument("--paper", default="data/paper.txt")
+    ap.add_argument("--run-id", default=None)
+    ap.add_argument("--repo", default="memory://", help='memory:// or sqlite:///data/solver.db')
+    ap.add_argument("--debug-json", default="data/p1_questions.json")
+    ap.add_argument("--preview", type=int, default=3)
     return ap
 
-
 def main() -> int:
-    ap = build_cli()
-    args = ap.parse_args()
-    if args.verbose:
-        logging.getLogger().setLevel(logging.DEBUG)
+    args = cli().parse_args()
+    repo = get_repository(args.repo)
+    p1 = P1IngestionService(repo=repo)
 
-    # 1) Ingest
-    paper_path = args.paper
-    run_id = args.run_id or _default_run_id(paper_path)
-    log.info("P1 Ingestion starting")
-    log.info(f"  paper={paper_path}")
-    log.info(f"  run_id={run_id}")
-
-    questions = parse_document(paper_path)
-    log.info(f"Parsed {len(questions)} questions")
-
-    # Preview
-    for q in questions[: max(0, args.preview)]:
-        opts = f" | opts={len(q['opts'])}" if q["has_options"] else ""
-        snippet = q["stem"].replace("\n", " ")
-        if len(snippet) > 120:
-            snippet = snippet[:120] + "..."
-        log.info(f"  {q['qid']}: {snippet}{opts}")
-
-    # 2) Optional: save to SQLite
-    if args.save_sqlite:
-        if not HAS_DB:
-            log.error("SQLite helpers not available. Add src/shared/db.py or remove --save-sqlite.")
-            return 2
-        init_sqlite(args.db_path)
-        upsert_run(run_id, paper_path, db_path=args.db_path)
-        save_questions(run_id, questions, db_path=args.db_path)
-        log.info(f"Saved questions to SQLite → {args.db_path} (run_id={run_id})")
-        
-        
-    # 3) Debug artifact
-    _save_debug_json(args.debug_json, questions)
-    log.info(f"Wrote debug JSON → {args.debug_json}")
-
-    # Future: call p2..p7 here when implemented
-    log.info("P1 complete.")
+    res = p1.ingest(args.paper, run_id=args.run_id, persist=True, debug_json_path=args.debug_json)
+    log.info(f"Parsed {res['total_questions']} questions (run_id={res['run_id']})")
+    for q in res["questions"][:args.preview]:
+        s = q["stem"].replace("\n"," ")
+        log.info(f"  {q['qid']}: {s[:120]}{'...' if len(s)>120 else ''}"
+                 f"{' | opts=' + str(len(q['opts'])) if q['has_options'] else ''}")
+    log.info(f"Debug JSON → {args.debug_json}")
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+
+
+
+
+# # src/main.py
+# """
+# KCET Math Solver — P1 Ingestion entry point (modular, DB-friendly).
+
+# Runs: TXT/PDF -> List[Question] (src.shared.schema.Question)
+# Optional: save to SQLite and write a debug JSON for inspection.
+# """
+
+# from __future__ import annotations
+# import argparse
+# import json
+# import logging
+# from datetime import datetime
+# from pathlib import Path
+# from typing import List
+
+# from src.p1_ingestion.api import parse_document
+# from src.shared.schema import Question
+
+# # Optional DB: safe to remove if you don't want SQLite persistence yet
+# try:
+#     from src.shared.db import init_sqlite, upsert_run, save_questions  # provided earlier
+#     HAS_DB = True
+# except Exception:
+#     HAS_DB = False
+
+# logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+# log = logging.getLogger("kcet.main")
+
+
+# def _default_run_id(paper_path: str) -> str:
+#     ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+#     base = Path(paper_path).stem
+#     return f"{base}-{ts}"
+
+
+# def _save_debug_json(path: str | Path, questions: List[Question]) -> None:
+#     p = Path(path)
+#     p.parent.mkdir(parents=True, exist_ok=True)
+#     with p.open("w", encoding="utf-8") as f:
+#         json.dump(questions, f, ensure_ascii=False, indent=2)
+
+
+# def build_cli() -> argparse.ArgumentParser:
+#     ap = argparse.ArgumentParser(description="KCET Math Solver — P1 Ingestion")
+#     ap.add_argument("--paper", default="data/paper.txt", help="Input paper path (.txt or .pdf)")
+#     ap.add_argument("--run-id", default=None, help="Run identifier; defaults to <paper>-<timestamp>")
+#     ap.add_argument("--debug-json", default="data/p1_questions.json", help="Where to write extracted questions JSON")
+#     ap.add_argument("--save-sqlite", action="store_true", help="Persist questions to SQLite (data/solver.db)")
+#     ap.add_argument("--db-path", default="data/solver.db", help="SQLite DB path (used only with --save-sqlite)")
+#     ap.add_argument("--preview", type=int, default=3, help="How many questions to preview in stdout")
+#     ap.add_argument("--verbose", action="store_true", help="Verbose logging")
+#     return ap
+
+
+# def main() -> int:
+#     ap = build_cli()
+#     args = ap.parse_args()
+#     if args.verbose:
+#         logging.getLogger().setLevel(logging.DEBUG)
+
+#     # 1) Ingest
+#     paper_path = args.paper
+#     run_id = args.run_id or _default_run_id(paper_path)
+#     log.info("P1 Ingestion starting")
+#     log.info(f"  paper={paper_path}")
+#     log.info(f"  run_id={run_id}")
+
+#     questions = parse_document(paper_path)
+#     log.info(f"Parsed {len(questions)} questions")
+
+#     # Preview
+#     for q in questions[: max(0, args.preview)]:
+#         opts = f" | opts={len(q['opts'])}" if q["has_options"] else ""
+#         snippet = q["stem"].replace("\n", " ")
+#         if len(snippet) > 120:
+#             snippet = snippet[:120] + "..."
+#         log.info(f"  {q['qid']}: {snippet}{opts}")
+
+#     # 2) Optional: save to SQLite
+#     if args.save_sqlite:
+#         if not HAS_DB:
+#             log.error("SQLite helpers not available. Add src/shared/db.py or remove --save-sqlite.")
+#             return 2
+#         init_sqlite(args.db_path)
+#         upsert_run(run_id, paper_path, db_path=args.db_path)
+#         save_questions(run_id, questions, db_path=args.db_path)
+#         log.info(f"Saved questions to SQLite → {args.db_path} (run_id={run_id})")
+        
+        
+#     # 3) Debug artifact
+#     _save_debug_json(args.debug_json, questions)
+#     log.info(f"Wrote debug JSON → {args.debug_json}")
+
+#     # Future: call p2..p7 here when implemented
+#     log.info("P1 complete.")
+#     return 0
+
+
+# if __name__ == "__main__":
+#     raise SystemExit(main())
 
 
 
