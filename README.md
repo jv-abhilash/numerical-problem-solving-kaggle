@@ -230,9 +230,13 @@ kcet-math-solver/
 ├── Dockerfile
 ├── data/
 │   ├── paper.txt
+|   ├── p1_questions.json
+|   ├── solver.db
+|   ├── answers_parsed.csv
 │   └── answer_key.csv
 ├── images/
-│   └── image1.png
+|   ├── image1.png
+│   └── image2.png
 ├── docker/
 │   └── docker-compose.micro.yml
 ├── services/
@@ -245,14 +249,17 @@ kcet-math-solver/
 |   ├── config.py                    # Global configuration
 |   │
 |   ├── p1_ingestion/                # P1: Document Ingestion & Parsing
-|   │   ├── __init__.py
-|   │   ├── config.py                # P1-specific config
-|   │   ├── readers.py               # PDF/TXT readers
-|   │   ├── cleaners.py              # Text cleaning
-|   │   ├── extractors.py            # Question extraction
-|   │   ├── validators.py            # Validation
-|   │   ├── parser.py                # Main parser
-|   │   └── api.py                   # Public API
+|   |   ├── api.py
+|   |   ├── services/
+|   |   |   └── p1_service.py
+|   |   └── parsing/ 
+|   |       ├── __init__.py
+|   |       ├── config.py                # P1-specific config
+|   |       ├── readers.py               # PDF/TXT readers
+|   |       ├── cleaners.py              # Text cleaning
+|   |       ├── extractors.py            # Question extraction
+|   |       ├── validators.py            # Validation
+|   |       └── parser.py                # Main parser
 |   │
 |   ├── p2_routing/                  # P2: Question Routing & Classification
 |   │   ├── __init__.py
@@ -305,6 +312,18 @@ kcet-math-solver/
 |   │   ├── mcp_client.py            # MCP client
 |   │   └── tools.py                 # Tool integrations
 |   │
+|   ├── models/                      
+|   │   ├── __init__.py
+|   │   ├── base.py
+|   |   ├── router_llm.py            
+|   │   └── solver_llm.py   
+|   |   
+|   ├── storage/
+|   |   ├── factory.py
+|   │   ├── inmen.py
+|   |   ├── interfaces.py            
+|   │   └── sqlite_repo.py             
+|   |
 |   └── shared/                      # Shared Utilities
 |       ├── __init__.py
 |       ├── io.py                    # I/O operations
