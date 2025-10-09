@@ -17,6 +17,9 @@ rich
 pdfplumber
 PyMuPDF
 
+litecli
+
+
 # requirements_streamlit.txt
 # Add these to your existing requirements.txt
 

@@ -26,7 +26,10 @@ data/*.csv
 data/*.parquet
 data/*.json
 data/*.xlsx
+data/*.db*
+data/*.sqlite
+data/*.json
 *.log
-
+related_files/
 
 */*archive*.py
