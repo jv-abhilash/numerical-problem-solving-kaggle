@@ -66,7 +66,7 @@ class DocumentParser:
                         txt = ""
                         # Prefer modern API
                         try:
-                            txt = page.get_text("text")  # PyMuPDF >= 1.18
+                            txt = page.get_text("text")  # type: ignore # PyMuPDF >= 1.18
                         except Exception:
                             # Fallback: some builds accept get_text() without arg
                             try:
@@ -74,7 +74,7 @@ class DocumentParser:
                             except Exception:
                                 # Very old API
                                 try:
-                                    txt = page.getText("text")  # PyMuPDF <= 1.17
+                                    txt = page.getText("text")  # type: ignore # PyMuPDF <= 1.17
                                 except Exception:
                                     txt = ""
                         out.append(txt or "")
