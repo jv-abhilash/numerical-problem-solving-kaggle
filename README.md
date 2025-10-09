@@ -250,8 +250,10 @@ kcet-math-solver/
 |   │
 |   ├── p1_ingestion/                # P1: Document Ingestion & Parsing
 |   |   ├── api.py
+|   |   |
 |   |   ├── services/
 |   |   |   └── p1_service.py
+|   |   |
 |   |   └── parsing/ 
 |   |       ├── __init__.py
 |   |       ├── config.py                # P1-specific config
