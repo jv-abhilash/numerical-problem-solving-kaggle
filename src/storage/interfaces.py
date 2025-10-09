@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Protocol, List
 from src.shared.schema import Question, RoutedQuestion, Plan, RawAnswer, VerifiedAnswer
 
-class RunRepository(Protocol):
+class RunRepositoryP1(Protocol):
     # lifecycle
     def init(self) -> None: ...
     def upsert_run(self, run_id: str, paper_path: str) -> None: ...

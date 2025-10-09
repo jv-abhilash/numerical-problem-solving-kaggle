@@ -1,10 +1,10 @@
 # src/storage/factory.py
 from __future__ import annotations
 from typing import Optional
-from src.storage.interfaces import RunRepository
+from src.storage.interfaces import RunRepositoryP1
 from src.storage.inmem_repo import InMemoryRunRepository
 
-def get_repository(db_url_or_path: Optional[str]) -> RunRepository | None:
+def get_repository(db_url_or_path: Optional[str]) -> RunRepositoryP1 | None:
     """
     Examples:
       None or "memory://" -> in-memory

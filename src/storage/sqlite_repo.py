@@ -4,9 +4,9 @@ import sqlite3
 from pathlib import Path
 from typing import List, Dict
 from src.shared.schema import Question
-from src.storage.interfaces import RunRepository
+from src.storage.interfaces import RunRepositoryP1
 
-class SQLiteRunRepository(RunRepository):
+class SQLiteRunRepository(RunRepositoryP1):
     def __init__(self, db_path: str = "data/solver.db") -> None:
         self.db_path = db_path
 

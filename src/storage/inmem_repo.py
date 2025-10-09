@@ -2,10 +2,10 @@
 from __future__ import annotations
 from typing import List, Dict, DefaultDict
 from collections import defaultdict
-from src.storage.interfaces import RunRepository
+from src.storage.interfaces import RunRepositoryP1
 from src.shared.schema import Question, RoutedQuestion, Plan, RawAnswer, VerifiedAnswer
 
-class InMemoryRunRepository(RunRepository):
+class InMemoryRunRepository(RunRepositoryP1):
     def __init__(self) -> None:
         self.runs: Dict[str, str] = {}
         self.qs: DefaultDict[str, List[Question]] = defaultdict(list)

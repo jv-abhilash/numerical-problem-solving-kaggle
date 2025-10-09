@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Optional, Dict, Any, List
 
 from src.p1_ingestion.api import parse_document
-from src.storage.interfaces import RunRepository
+from src.storage.interfaces import RunRepositoryP1
 from src.shared.schema import Question
 
 def _default_run_id(paper_path: str) -> str:
@@ -14,7 +14,7 @@ def _default_run_id(paper_path: str) -> str:
     return f"{Path(paper_path).stem}-{ts}"
 
 class P1IngestionService:
-    def __init__(self, repo: RunRepository | None) -> None:
+    def __init__(self, repo: RunRepositoryP1 | None) -> None:
         self.repo = repo
 
     def ingest(self,
