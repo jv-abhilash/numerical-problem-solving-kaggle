@@ -1,41 +1,123 @@
 # src/main.py
 from __future__ import annotations
-import argparse, logging
+import argparse
+import logging
+from typing import Optional
+
 from src.storage.factory import get_repository
 from src.p1_ingestion.services.p1_service import P1IngestionService
+
+# P2 service (make sure to create this)
+try:
+    from src.p2_routing.services.p2_service import P2RoutingService
+    HAS_P2 = True
+except Exception:
+    HAS_P2 = False
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 log = logging.getLogger("kcet.main")
 
-def cli():
-    ap = argparse.ArgumentParser("KCET Solver — P1")
-    ap.add_argument("--paper", default="data/paper.txt")
-    ap.add_argument("--run-id", default=None)
-    ap.add_argument("--repo", default="memory://", help='memory:// or sqlite:///data/solver.db')
-    ap.add_argument("--debug-json", default="data/p1_questions.json")
-    ap.add_argument("--preview", type=int, default=3)
+
+def cli() -> argparse.ArgumentParser:
+    ap = argparse.ArgumentParser("KCET Solver — main")
+    ap.add_argument(
+        "--stage",
+        choices=["p1", "p2", "p1+p2"],
+        default="p1",
+        help="Which stage to run",
+    )
+    ap.add_argument("--repo", default="memory://", help="memory:// or sqlite:///data/solver.db")
+
+    # ---------- P1 args ----------
+    ap.add_argument("--paper", default="data/paper.txt", help="Input .txt/.pdf for P1 ingestion")
+    ap.add_argument("--run-id", default=None, help="Run identifier; default=<paper-stem>-<timestamp>")
+    ap.add_argument("--debug-json", default="data/p1_questions.json", help="P1: write extracted questions JSON")
+    ap.add_argument("--preview", type=int, default=3, help="Preview first N questions in logs")
+
+    # ---------- P2 args ----------
+    ap.add_argument("--p2-debug-json", default="data/p2_routes.json", help="P2: write routed JSON")
+    ap.add_argument("--batch-size", type=int, default=32, help="P2: batch size for routing calls")
+    ap.add_argument("--model", default="mcp:router", help="P2: model hint (e.g., mcp:router, openai:gpt-4o-mini)")
+    ap.add_argument("--recompute", action="store_true", help="P2: recompute even if routes already exist")
+
     return ap
+
+
+def run_p1(repo, paper: str, run_id: Optional[str], debug_json: str, preview: int) -> dict:
+    repo.init()  # create/upgrade tables
+    p1 = P1IngestionService(repo=repo)
+    res = p1.ingest(paper_path=paper, run_id=run_id, persist=True, debug_json_path=debug_json)
+    log.info(f"P1: Parsed {res['total_questions']} questions (run_id={res['run_id']})")
+
+    for q in res["questions"][: max(0, preview)]:
+        stem = q["stem"].replace("\n", " ")
+        snippet = stem[:120] + ("..." if len(stem) > 120 else "")
+        suffix = f" | opts={len(q.get('opts', []))}" if q.get("has_options") else ""
+        log.info(f"  {q['qid']}: {snippet}{suffix}")
+
+    log.info(f"P1 debug JSON → {debug_json}")
+    return res
+
+
+def run_p2(repo, run_id: str, batch_size: int, model: str, debug_json: str, recompute: bool) -> dict:
+    if not HAS_P2:
+        raise RuntimeError("P2RoutingService not available. Create src/p2_routing/services/p2_service.py")
+    repo.init()
+    p2 = P2RoutingService(repo=repo, model_hint=model, batch_size=batch_size)
+    res = p2.route(
+        run_id=run_id,
+        persist=True,
+        debug_json_path=debug_json,
+        recompute=recompute,
+    )
+
+    # Pretty log summary
+    total = res.get("total", 0)
+    log.info(f"P2: Routed {total} questions (run_id={run_id})")
+    if "bucket_counts" in res and res["bucket_counts"]:
+        counts = ", ".join(f"{k}={v}" for k, v in sorted(res["bucket_counts"].items()))
+        log.info(f"  Buckets: {counts}")
+    if "topic_counts" in res and res["topic_counts"]:
+        counts = ", ".join(f"{k}={v}" for k, v in sorted(res["topic_counts"].items()))
+        log.info(f"  Topics : {counts}")
+    if "difficulty_counts" in res and res["difficulty_counts"]:
+        counts = ", ".join(f"{k}={v}" for k, v in sorted(res["difficulty_counts"].items()))
+        log.info(f"  Diff   : {counts}")
+    log.info(f"P2 debug JSON → {debug_json}")
+    return res
+
 
 def main() -> int:
     args = cli().parse_args()
     repo = get_repository(args.repo)
-    p1 = P1IngestionService(repo=repo)
 
-    res = p1.ingest(args.paper, run_id=args.run_id, persist=True, debug_json_path=args.debug_json)
-    log.info(f"Parsed {res['total_questions']} questions (run_id={res['run_id']})")
-    for q in res["questions"][:args.preview]:
-        s = q["stem"].replace("\n"," ")
-        log.info(f"  {q['qid']}: {s[:120]}{'...' if len(s)>120 else ''}"
-                 f"{' | opts=' + str(len(q['opts'])) if q['has_options'] else ''}")
-    log.info(f"Debug JSON → {args.debug_json}")
+    # P1 only
+    if args.stage == "p1":
+        res_p1 = run_p1(repo, args.paper, args.run_id, args.debug_json, args.preview)
+        log.info("P1 complete.")
+        return 0
+
+    # P2 only (requires run_id already present from P1)
+    if args.stage == "p2":
+        if not args.run_id:
+            raise SystemExit("--run-id is required for --stage p2")
+        run_p2(repo, args.run_id, args.batch_size, args.model, args.p2_debug_json, args.recompute)
+        log.info("P2 complete.")
+        return 0
+
+    # P1 + P2
+    if args.stage == "p1+p2":
+        res_p1 = run_p1(repo, args.paper, args.run_id, args.debug_json, args.preview)
+        run_id = res_p1["run_id"]
+        run_p2(repo, run_id, args.batch_size, args.model, args.p2_debug_json, args.recompute)
+        log.info("P1+P2 complete.")
+        return 0
+
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
-
-
-
 
 
 # # src/main.py

@@ -1,16 +1,15 @@
 # src/storage/factory.py
 from __future__ import annotations
-from typing import Optional
-from src.storage.interfaces import RunRepositoryP1
+from typing import Optional, Union
 from src.storage.inmem_repo import InMemoryRunRepository
+from src.storage.interfaces import RunRepositoryP1, RunRepositoryP2
 
-def get_repository(db_url_or_path: Optional[str]) -> RunRepositoryP1 | None:
+Repo = Union[RunRepositoryP1, RunRepositoryP2]
+
+def get_repository(db_url_or_path: Optional[str]) -> Repo:
     """
-    Examples:
-      None or "memory://" -> in-memory
-      "sqlite:///data/solver.db" or "data/solver.db" -> SQLite
-      (future) "postgresql://..." -> Postgres repo
-      (future) "http://..." -> HTTP repo
+    None or 'memory://' -> in-memory repo
+    'sqlite:///data/solver.db' or 'data/solver.db' -> SQLite repo
     """
     if not db_url_or_path or db_url_or_path.startswith("memory://"):
         return InMemoryRunRepository()
