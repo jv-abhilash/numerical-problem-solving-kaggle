@@ -33,3 +33,5 @@ data/*.json
 related_files/
 
 */*archive*.py
+
+.gitignore
