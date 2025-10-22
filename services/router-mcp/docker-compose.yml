@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  router-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kcet-router-mcp
+    image: kcet-router-mcp:latest
+
+    # GPU configuration
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1  # Use 1 GPU
+              capabilities: [gpu]
+
+    # Environment variables
+    environment:
+      - ROUTER_MODEL_ID=Qwen/Qwen2.5-Math-7B-Instruct
+      - MCP_API_KEY=${MCP_API_KEY:-}  # Optional: set in .env file
+      - MAX_NEW_TOKENS=32
+      - TEMPERATURE=0.0
+      - CUDA_VISIBLE_DEVICES=0
+      - TRANSFORMERS_CACHE=/app/models
+      - HF_HOME=/app/models
+
+    # Port mapping
+    ports:
+      - "7001:7001"
+
+    # Volume mounts
+    volumes:
+      - router-models:/app/models  # Persistent model cache
+      - ./logs:/app/logs           # Log files
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s  # Allow 2 minutes for model loading
+
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  router-models:
+    driver: local

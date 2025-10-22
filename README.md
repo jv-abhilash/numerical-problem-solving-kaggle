@@ -263,15 +263,29 @@ kcet-math-solver/
 |   |       ├── validators.py            # Validation
 |   |       └── parser.py                # Main parser
 |   │
-|   ├── p2_routing/                  # P2: Question Routing & Classification
-|   │   ├── __init__.py
-|   │   ├── config.py
-|   │   ├── classifier.py            # Topic classification
-|   │   ├── difficulty.py            # Difficulty assessment
-|   │   ├── router.py                # Main router
+|   ├── p2_routing/
+|   |   ├── engines
+|   |   |   ├── __init__.py
+|   |   |   └── heuristics_engines.py
+|   |   |
+|   |   ├── clients
+|   |   |   └── mcp_router.py
+|   |   |
+|   |   ├── services
+|   |   |   └── routing_service.py
+|   |   |
+|   |   ├── classification                  # P2: Question Routing & Classification
+|   │   |   ├── __init__.py
+|   │   |   ├── config.py
+|   │   |   ├── classifier.py            # Topic classification
+|   │   |   ├── difficulty.py            # Difficulty assessment
+|   │   |   ├── router.py                # Main router
+|   |   |   └── rules.py
+|   |   |
+|   |   ├── interfaces.py
 |   │   └── api.py
 |   │
-|   ├── p3_planning/                 # P3: Step Planning & Budgeting
+|   ├── p3_planning/                  # P3: Step Planning & Budgeting
 |   │   ├── __init__.py
 |   │   ├── planner.py               # Step planner
 |   │   ├── budgeter.py              # Budget allocation
@@ -328,10 +342,11 @@ kcet-math-solver/
 |   |
 |   └── shared/                      # Shared Utilities
 |       ├── __init__.py
+|       ├── db.py
 |       ├── io.py                    # I/O operations
 |       ├── schema.py                # Data schemas
 |       ├── normalize.py             # Text normalization
-|       └── logging.py               # Logging utilities    
+|       └── json_tools.py            # Logging utilities    
 |
 ├── scripts/
 │   └── run_local.sh

@@ -1,18 +1,32 @@
 # src/main.py
 from __future__ import annotations
 import argparse
+import json
 import logging
-from typing import Optional
+from pathlib import Path
+from typing import Optional, Callable
 
 from src.storage.factory import get_repository
+from src.storage.interfaces import RunRepositoryP1P2P3  # combined protocol
 from src.p1_ingestion.services.p1_service import P1IngestionService
+from src.shared.config import ROUTER_STRATEGY  # from .env (llm_http | heuristic | mcp)
 
-# P2 service (make sure to create this)
+# P2 service (safe import)
 try:
-    from src.p2_routing.services.p2_service import P2RoutingService
+    from src.p2_routing.services.routing_service import P2RoutingService as _P2RoutingService
     HAS_P2 = True
 except Exception:
+    _P2RoutingService = None  # type: ignore[assignment]
     HAS_P2 = False
+
+# P3 api (safe import)
+_run_planning: Optional[Callable[..., dict]] = None
+try:
+    from src.p3_planning.api import run_planning as _rp  # type: ignore
+    _run_planning = _rp
+    HAS_P3 = True
+except Exception:
+    HAS_P3 = False
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 log = logging.getLogger("kcet.main")
@@ -22,9 +36,9 @@ def cli() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser("KCET Solver — main")
     ap.add_argument(
         "--stage",
-        choices=["p1", "p2", "p1+p2"],
+        choices=["p1", "p2", "p3", "p1+p2", "p1+p2+p3"],
         default="p1",
-        help="Which stage to run",
+        help="Which stage(s) to run",
     )
     ap.add_argument("--repo", default="memory://", help="memory:// or sqlite:///data/solver.db")
 
@@ -36,14 +50,30 @@ def cli() -> argparse.ArgumentParser:
 
     # ---------- P2 args ----------
     ap.add_argument("--p2-debug-json", default="data/p2_routes.json", help="P2: write routed JSON")
-    ap.add_argument("--batch-size", type=int, default=32, help="P2: batch size for routing calls")
-    ap.add_argument("--model", default="mcp:router", help="P2: model hint (e.g., mcp:router, openai:gpt-4o-mini)")
-    ap.add_argument("--recompute", action="store_true", help="P2: recompute even if routes already exist")
+    ap.add_argument("--batch-size", type=int, default=32, help="P2: batch size hint for routing")
+    ap.add_argument(
+        "--router",
+        default=ROUTER_STRATEGY,                      # from .env (llm_http | heuristic | mcp)
+        choices=["heuristic", "mcp", "llm_http"],
+        help="Routing engine",
+    )
+    ap.add_argument("--mcp-endpoint", default=None, help="MCP endpoint (required if --router mcp)")
+    ap.add_argument("--mcp-api-key", default=None, help="MCP API key (optional)")
+    ap.add_argument("--mcp-tool", default="route_questions", help="MCP tool name")
+
+    # ---------- P3 args ----------
+    ap.add_argument("--p3-debug-json", default="data/p3_planning.json", help="P3: write planning JSON")
 
     return ap
 
 
-def run_p1(repo, paper: str, run_id: Optional[str], debug_json: str, preview: int) -> dict:
+def _ensure_parent(path_str: str) -> Path:
+    p = Path(path_str)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    return p
+
+
+def run_p1(repo: RunRepositoryP1P2P3, paper: str, run_id: Optional[str], debug_json: str, preview: int) -> dict:
     repo.init()  # create/upgrade tables
     p1 = P1IngestionService(repo=repo)
     res = p1.ingest(paper_path=paper, run_id=run_id, persist=True, debug_json_path=debug_json)
@@ -59,49 +89,107 @@ def run_p1(repo, paper: str, run_id: Optional[str], debug_json: str, preview: in
     return res
 
 
-def run_p2(repo, run_id: str, batch_size: int, model: str, debug_json: str, recompute: bool) -> dict:
-    if not HAS_P2:
-        raise RuntimeError("P2RoutingService not available. Create src/p2_routing/services/p2_service.py")
+def run_p2(
+    repo: RunRepositoryP1P2P3,
+    run_id: str,
+    batch_size: int,
+    router: str,
+    mcp_endpoint: Optional[str],
+    mcp_api_key: Optional[str],
+    mcp_tool: str,
+    debug_json: str,
+) -> dict:
+    if not HAS_P2 or _P2RoutingService is None:
+        raise RuntimeError("P2RoutingService not available. Ensure src/p2_routing/services/routing_service.py exists.")
     repo.init()
-    p2 = P2RoutingService(repo=repo, model_hint=model, batch_size=batch_size)
+
+    p2 = _P2RoutingService(repo=repo)  # type: ignore[operator]
     res = p2.route(
         run_id=run_id,
         persist=True,
-        debug_json_path=debug_json,
-        recompute=recompute,
+        batch_size=batch_size,
+        router=router,
+        mcp_endpoint=mcp_endpoint,
+        mcp_api_key=mcp_api_key,
+        mcp_tool=mcp_tool,
     )
 
-    # Pretty log summary
     total = res.get("total", 0)
     log.info(f"P2: Routed {total} questions (run_id={run_id})")
-    if "bucket_counts" in res and res["bucket_counts"]:
-        counts = ", ".join(f"{k}={v}" for k, v in sorted(res["bucket_counts"].items()))
+    if "buckets" in res and res["buckets"]:
+        counts = ", ".join(f"{k}={v}" for k, v in sorted(res["buckets"].items()))
         log.info(f"  Buckets: {counts}")
-    if "topic_counts" in res and res["topic_counts"]:
+
+    # Write routed JSON (load from repo after persist)
+    try:
+        routes = repo.load_routes(run_id)
+        _ensure_parent(debug_json).write_text(json.dumps(routes, ensure_ascii=False, indent=2), encoding="utf-8")
+        log.info(f"P2 debug JSON → {debug_json}")
+    except Exception as e:
+        log.warning(f"Could not write P2 debug JSON: {e}")
+
+    return res
+
+
+def run_p3(
+    repo: RunRepositoryP1P2P3,
+    run_id: str,
+    debug_json: str,
+) -> dict:
+    if not HAS_P3 or _run_planning is None:
+        raise RuntimeError("P3 not available. Ensure src/p3_planning/api.py exists.")
+    repo.init()
+
+    res = _run_planning(repo, run_id, persist=True)  # type: ignore[misc]
+    total = res.get("total", 0)
+    log.info(f"P3: planned {total} questions")
+
+    # Log topic/difficulty breakdown
+    if "topic_counts" in res:
         counts = ", ".join(f"{k}={v}" for k, v in sorted(res["topic_counts"].items()))
-        log.info(f"  Topics : {counts}")
-    if "difficulty_counts" in res and res["difficulty_counts"]:
+        log.info(f"  Topics: {counts}")
+    if "difficulty_counts" in res:
         counts = ", ".join(f"{k}={v}" for k, v in sorted(res["difficulty_counts"].items()))
-        log.info(f"  Diff   : {counts}")
-    log.info(f"P2 debug JSON → {debug_json}")
+        log.info(f"  Difficulties: {counts}")
+
+    # Write planning JSON (load from repo after persist)
+    try:
+        plans = repo.load_plans(run_id)
+        _ensure_parent(debug_json).write_text(json.dumps(plans, ensure_ascii=False, indent=2), encoding="utf-8")
+        log.info(f"P3 debug JSON → {debug_json}")
+    except Exception as e:
+        log.warning(f"Could not write P3 debug JSON: {e}")
+
     return res
 
 
 def main() -> int:
     args = cli().parse_args()
-    repo = get_repository(args.repo)
+    # Concrete repo implements P1+P2(+P3); we assert combined protocol for type-checker
+    repo: RunRepositoryP1P2P3 = get_repository(args.repo)  # type: ignore[assignment]
 
     # P1 only
     if args.stage == "p1":
-        res_p1 = run_p1(repo, args.paper, args.run_id, args.debug_json, args.preview)
+        run_p1(repo, args.paper, args.run_id, args.debug_json, args.preview)
         log.info("P1 complete.")
         return 0
 
-    # P2 only (requires run_id already present from P1)
+    # P2 only (requires run_id present from P1)
     if args.stage == "p2":
         if not args.run_id:
             raise SystemExit("--run-id is required for --stage p2")
-        run_p2(repo, args.run_id, args.batch_size, args.model, args.p2_debug_json, args.recompute)
+        if args.router == "mcp" and not args.mcp_endpoint:
+            raise SystemExit("--mcp-endpoint is required when --router mcp")
+        run_p2(
+            repo=repo,
+            run_id=args.run_id,
+            batch_size=args.batch_size,
+            router=args.router,
+            mcp_endpoint=args.mcp_endpoint,
+            mcp_api_key=args.mcp_api_key,
+            mcp_tool=args.mcp_tool,
+            debug_json=args.p2_debug_json,
+        )
         log.info("P2 complete.")
         return 0
 
@@ -109,16 +197,57 @@ def main() -> int:
     if args.stage == "p1+p2":
         res_p1 = run_p1(repo, args.paper, args.run_id, args.debug_json, args.preview)
         run_id = res_p1["run_id"]
-        run_p2(repo, run_id, args.batch_size, args.model, args.p2_debug_json, args.recompute)
+        if args.router == "mcp" and not args.mcp_endpoint:
+            raise SystemExit("--mcp-endpoint is required when --router mcp")
+        run_p2(
+            repo=repo,
+            run_id=run_id,
+            batch_size=args.batch_size,
+            router=args.router,
+            mcp_endpoint=args.mcp_endpoint,
+            mcp_api_key=args.mcp_api_key,
+            mcp_tool=args.mcp_tool,
+            debug_json=args.p2_debug_json,
+        )
         log.info("P1+P2 complete.")
         return 0
 
+    # P3 only (requires run_id present from P2)
+    if args.stage == "p3":
+        if not args.run_id:
+            raise SystemExit("--run-id is required for --stage p3")
+        run_p3(repo, args.run_id, args.p3_debug_json)
+        log.info("P3 complete.")
+        return 0
+
+    # P1 + P2 + P3
+    if args.stage == "p1+p2+p3":
+        if not HAS_P3 or _run_planning is None:
+            raise SystemExit("P3 not available")
+        res_p1 = run_p1(repo, args.paper, args.run_id, args.debug_json, args.preview)
+        run_id = res_p1["run_id"]
+        if args.router == "mcp" and not args.mcp_endpoint:
+            raise SystemExit("--mcp-endpoint is required when --router mcp")
+        run_p2(
+            repo=repo,
+            run_id=run_id,
+            batch_size=args.batch_size,
+            router=args.router,
+            mcp_endpoint=args.mcp_endpoint,
+            mcp_api_key=args.mcp_api_key,
+            mcp_tool=args.mcp_tool,
+            debug_json=args.p2_debug_json,
+        )
+        run_p3(repo, run_id, args.p3_debug_json)
+        log.info("P1+P2+P3 complete.")
+        return 0
+
+    # Shouldn’t reach here
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
 
 # # src/main.py
 # """

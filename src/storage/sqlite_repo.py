@@ -4,9 +4,12 @@ import json, sqlite3
 from pathlib import Path
 from typing import List, Dict
 from src.shared.schema import Question
-from src.storage.interfaces import RunRepositoryP1, RunRepositoryP2, RouteRecord
+from src.storage.interfaces import (
+    RunRepositoryP1, RunRepositoryP2, RunRepositoryP3,
+    RouteRecord, PlanRecord
+)
 
-class SQLiteRunRepository(RunRepositoryP1, RunRepositoryP2):
+class SQLiteRunRepository(RunRepositoryP1, RunRepositoryP2, RunRepositoryP3):
     def __init__(self, db_path: str = "data/solver.db") -> None:
         self.db_path = db_path
 
@@ -21,7 +24,7 @@ class SQLiteRunRepository(RunRepositoryP1, RunRepositoryP2):
     def init(self) -> None:
         with self._conn() as con:
             cur = con.cursor()
-            # P1
+            # P1 tables ...
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS runs (
                   run_id TEXT PRIMARY KEY,
@@ -45,13 +48,14 @@ class SQLiteRunRepository(RunRepositoryP1, RunRepositoryP2):
                 CREATE TABLE IF NOT EXISTS options (
                   run_id TEXT NOT NULL,
                   qid TEXT NOT NULL,
-                  idx INTEGER NOT NULL,   -- 0..3
+                  idx INTEGER NOT NULL,
                   text TEXT NOT NULL,
                   PRIMARY KEY (run_id, qid, idx),
                   FOREIGN KEY (run_id, qid) REFERENCES questions(run_id, qid) ON DELETE CASCADE
                 );
             """)
-            # P2
+
+            # P2 tables ...
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS routes (
                   run_id     TEXT NOT NULL,
@@ -59,7 +63,7 @@ class SQLiteRunRepository(RunRepositoryP1, RunRepositoryP2):
                   topic      TEXT NOT NULL,
                   subtopic   TEXT,
                   difficulty TEXT NOT NULL,
-                  needs_tools TEXT NOT NULL,     -- JSON array
+                  needs_tools TEXT NOT NULL,
                   confidence REAL NOT NULL,
                   notes      TEXT,
                   bucket     TEXT NOT NULL,
@@ -78,6 +82,26 @@ class SQLiteRunRepository(RunRepositoryP1, RunRepositoryP2):
                   FOREIGN KEY(run_id) REFERENCES runs(run_id) ON DELETE CASCADE
                 );
             """)
+
+            # P3 table (ADD THIS)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS plans (
+                  run_id TEXT NOT NULL,
+                  qid TEXT NOT NULL,
+                  topic TEXT NOT NULL,
+                  difficulty TEXT NOT NULL,
+                  bucket TEXT NOT NULL,
+                  steps_json TEXT NOT NULL,
+                  tools_json TEXT NOT NULL,
+                  budget_tokens INTEGER NOT NULL,
+                  max_calls INTEGER NOT NULL,
+                  priority INTEGER NOT NULL,
+                  notes TEXT,
+                  PRIMARY KEY (run_id, qid),
+                  FOREIGN KEY (run_id, qid) REFERENCES questions(run_id, qid) ON DELETE CASCADE
+                );
+            """)
+
             con.commit()
 
     # ----- P1 -----
@@ -198,3 +222,57 @@ class SQLiteRunRepository(RunRepositoryP1, RunRepositoryP2):
                 (run_id,)
             ).fetchall()
         return {b: int(c) for (b, c) in rows}
+    
+    
+    # ---------- P3 (unchanged, now type-clean because PlanRecord keys are Required) ----------
+    def save_plans(self, run_id: str, plans: List[PlanRecord]) -> None:
+        if not plans:
+            return
+        with self._conn() as con:
+            cur = con.cursor()
+            cur.execute("DELETE FROM plans WHERE run_id=?", (run_id,))
+            rows = []
+            import json as _json
+            for p in plans:
+                rows.append((
+                    run_id,
+                    p["qid"],
+                    p["topic"],
+                    p["difficulty"],
+                    p["bucket"],
+                    _json.dumps(p["steps"], ensure_ascii=False),
+                    _json.dumps(p["tools"], ensure_ascii=False),
+                    int(p["budget_tokens"]),
+                    int(p["max_calls"]),
+                    int(p["priority"]),
+                    p.get("notes"),
+                ))
+            cur.executemany("""
+                INSERT INTO plans(run_id,qid,topic,difficulty,bucket,steps_json,tools_json,budget_tokens,max_calls,priority,notes)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?)
+            """, rows)
+            con.commit()
+
+    def load_plans(self, run_id: str) -> List[PlanRecord]:
+        with self._conn() as con:
+            con.row_factory = sqlite3.Row
+            rows = con.execute(
+                "SELECT * FROM plans WHERE run_id=? ORDER BY priority, qid", (run_id,)
+            ).fetchall()
+        import json as _json
+        out: List[PlanRecord] = []
+        for r in rows:
+            out.append({
+                "run_id": r["run_id"],
+                "qid": r["qid"],
+                "topic": r["topic"],
+                "difficulty": r["difficulty"],
+                "bucket": r["bucket"],
+                "steps": _json.loads(r["steps_json"] or "[]"),
+                "tools": _json.loads(r["tools_json"] or "[]"),
+                "budget_tokens": int(r["budget_tokens"]),
+                "max_calls": int(r["max_calls"]),
+                "priority": int(r["priority"]),
+                "notes": r["notes"],
+            })
+        return out

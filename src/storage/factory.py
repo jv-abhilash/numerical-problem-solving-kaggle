@@ -1,12 +1,10 @@
 # src/storage/factory.py
 from __future__ import annotations
-from typing import Optional, Union
+from typing import Optional
 from src.storage.inmem_repo import InMemoryRunRepository
-from src.storage.interfaces import RunRepositoryP1, RunRepositoryP2
+from src.storage.interfaces import RunRepositoryP1P2P3  # combined protocol
 
-Repo = Union[RunRepositoryP1, RunRepositoryP2]
-
-def get_repository(db_url_or_path: Optional[str]) -> Repo:
+def get_repository(db_url_or_path: Optional[str]) -> RunRepositoryP1P2P3:
     """
     None or 'memory://' -> in-memory repo
     'sqlite:///data/solver.db' or 'data/solver.db' -> SQLite repo

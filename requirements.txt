@@ -17,7 +17,26 @@ rich
 pdfplumber
 PyMuPDF
 
+python-dotenv
+requests
+
 litecli
+
+typing_extensions
+
+fastapi
+uvicorn[standard]
+transformers
+torch
+request
+
+# For MCP server
+# fastapi
+# uvicorn
+# pydantic
+# transformers
+# torch
+# bitsandbytes
 
 
 # requirements_streamlit.txt
