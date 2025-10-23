@@ -9,6 +9,7 @@ from src.shared.config import (
 
 # Import the HTTP LLM engine
 from src.p2_routing.clients.llm_http_router import LLMHttpRouterEngine
+from src.p2_routing.classification.router import HeuristicRouterEngine
 
 def get_router_engine(
     kind: str = "llm_http",
@@ -21,15 +22,19 @@ def get_router_engine(
     """
     Get router engine instance.
 
-    Currently only supports 'llm_http' (LLM over HTTP).
-    Heuristic and MCP routers have been removed.
+    Supports:
+    - 'llm_http': LLM over HTTP (remote server with GPU)
+    - 'heuristic': Local keyword-based classification (no server needed)
     """
-    if kind != "llm_http":
-        raise ValueError(f"Unsupported router kind: {kind}. Only 'llm_http' is supported.")
+    if kind == "heuristic":
+        return HeuristicRouterEngine()
 
-    return LLMHttpRouterEngine(
-        base_url=base_url or ROUTER_BASE_URL,
-        model_id=model_id or ROUTER_MODEL_ID,
-        api_key=api_key if api_key is not None else ROUTER_API_KEY,
-        timeout=float(timeout if timeout is not None else ROUTER_TIMEOUT),
-    )
+    if kind == "llm_http":
+        return LLMHttpRouterEngine(
+            base_url=base_url or ROUTER_BASE_URL,
+            model_id=model_id or ROUTER_MODEL_ID,
+            api_key=api_key if api_key is not None else ROUTER_API_KEY,
+            timeout=float(timeout if timeout is not None else ROUTER_TIMEOUT),
+        )
+
+    raise ValueError(f"Unsupported router kind: {kind}. Use 'llm_http' or 'heuristic'.")

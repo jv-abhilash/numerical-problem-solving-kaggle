@@ -1,6 +1,6 @@
 # KCET Math Solver - Complete Project Documentation
 
-**Version:** 0.1  
+**Version:** 3.1  
 **Status:** Architecture agreed; repo skeleton + MCP/microservices scaffold created; monolith mode runnable; microservices optional.
 
 ## Table of Contents
@@ -231,18 +231,24 @@ kcet-math-solver/
 ├── data/
 │   ├── paper.txt
 |   ├── p1_questions.json
+|   ├── p2_ routes.json
+|   ├── p3_planning.json    
 |   ├── solver.db
 |   ├── answers_parsed.csv
 │   └── answer_key.csv
+|
 ├── images/
 |   ├── image1.png
 │   └── image2.png
+|
 ├── docker/
 │   └── docker-compose.micro.yml
+|
 ├── services/
 │   ├── sympy-mcp/
 │   ├── pdf-mcp/
 │   └── eval-mcp/
+|
 ├── src/
 |   ├── __init__.py
 |   ├── main.py                      # Main orchestrator
